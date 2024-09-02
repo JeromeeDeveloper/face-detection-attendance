@@ -18,3 +18,14 @@ class Member(models.Model):
 
     def __str__(self):
         return self.lastname
+    
+
+class log(models.Model):
+    profile = models.ForeignKey(Member, on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to='logs')
+    is_correct = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Log of {self.profile.employee_ID}"
+    

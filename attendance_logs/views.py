@@ -1,11 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 import cv2
 from django.http import StreamingHttpResponse
 import face_recognition
 
 
-def xxx(request):
-    return redirect(request, 'app1.html')
+
 
 
 def gen(camera):
@@ -23,7 +22,55 @@ def gen(camera):
 def video_feed(request):
     # Capture video from webcam
     camera = cv2.VideoCapture(0)
-    return StreamingHttpResponse(gen(camera),
+    cap = cv2.VideoCapture(0)
+
+    if not cap.isOpened():
+        print("Error: Could not access webcam.")
+        exit()
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("Error: Could not read frame from webcam.")
+            break
+
+        # Convert the frame from BGR to RGB
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Find face locations
+        face_locations = face_recognition.face_locations(rgb_frame)
+
+        if face_locations:
+            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+
+            for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
+                matches = face_recognition.compare_faces([ref_encoding], face_encoding)
+
+                if matches[0]:
+                    label = 'Face Recognized'
+                    color = (0, 255, 0)  # Green for recognized face
+                else:
+                    label = 'Face Not Recognized'
+                    color = (0, 0, 255)  # Red for unrecognized face
+
+                # Draw rectangle around the face
+                cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+                cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+        else:
+            # If no face is detected
+            cv2.putText(frame, 'No Face Detected', (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+        # Display the resulting frame
+        cv2.imshow('Face Detection and Recognition', frame)
+
+        # Break the loop on 'q' key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release the webcam and close all OpenCV windows
+    cap.release()
+    cv2.destroyAllWindows()
+    return StreamingHttpResponse(gen(cap),
                                  content_type='multipart/x-mixed-replace; boundary=frame')
 
 def Home(request):
@@ -50,51 +97,4 @@ except FileNotFoundError as e:
     exit()
 
 # Access the webcam
-cap = cv2.VideoCapture(0)
 
-if not cap.isOpened():
-    print("Error: Could not access webcam.")
-    exit()
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        print("Error: Could not read frame from webcam.")
-        break
-
-    # Convert the frame from BGR to RGB
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-    # Find face locations
-    face_locations = face_recognition.face_locations(rgb_frame)
-
-    if face_locations:
-        face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
-
-        for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
-            matches = face_recognition.compare_faces([ref_encoding], face_encoding)
-
-            if matches[0]:
-                label = 'Face Recognized'
-                color = (0, 255, 0)  # Green for recognized face
-            else:
-                label = 'Face Not Recognized'
-                color = (0, 0, 255)  # Red for unrecognized face
-
-            # Draw rectangle around the face
-            cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
-            cv2.putText(frame, label, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
-    else:
-        # If no face is detected
-        cv2.putText(frame, 'No Face Detected', (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-    # Display the resulting frame
-    cv2.imshow('Face Detection and Recognition', frame)
-
-    # Break the loop on 'q' key press
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release the webcam and close all OpenCV windows
-cap.release()
-cv2.destroyAllWindows()
