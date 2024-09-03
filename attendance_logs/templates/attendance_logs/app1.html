@@ -1,13 +1,90 @@
-<!-- attendance_logs/templates/app1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Feed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #video-stream {
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none; /* Hide the video element initially */
+        }
+
+        .btn {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        #message {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Video Stream</h1>
-    <img src="{% url 'video-feed' %}" width="640" height="480">
+    <div class="container">
+        <h1>Video Stream</h1>
+        <p id="message">Please start the attendance by clicking Start.</p>
+        <img id="video-stream" src="" width="640" height="480">
+        <div>
+            <button class="btn" id="start-btn">Start</button>
+            <button class="btn" id="stop-btn">Stop</button>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const videoStream = document.getElementById('video-stream');
+        const message = document.getElementById('message');
+
+        startBtn.addEventListener('click', function() {
+            videoStream.src = "{% url 'video-feed' %}";
+            videoStream.style.display = 'block';  // Show the video when stream starts
+            message.style.display = 'none';      // Hide the message
+        });
+
+        stopBtn.addEventListener('click', function() {
+            videoStream.src = "";
+            videoStream.style.display = 'none';  // Hide the video when stream stops
+            message.style.display = 'block';     // Show the message
+        });
+    </script>
 </body>
 </html>
